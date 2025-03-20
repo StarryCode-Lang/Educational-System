@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师主页</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .header { background: #667eea; color: white; padding: 1rem; text-align: center; border-radius: 5px 5px 0 0; }
+        .tabs { display: flex; background: #fff; border-bottom: 1px solid #ddd; }
+        .tab { flex: 1; padding: 1rem; text-align: center; cursor: pointer; transition: background 0.3s; }
+        .tab:hover, .tab.active { background: #667eea; color: white; }
+        .content { background: white; padding: 2rem; border-radius: 0 0 5px 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.8rem; border: 1px solid #ddd; text-align: center; vertical-align: top; }
+        th { background: #667eea; color: white; }
+        td { background: #f9f9f9; }
+        button { padding: 0.5rem 1rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #5a6cd8; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; }
+        input, select { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px; }
+        .edit-form { display: none; }
+        #course-filter, #courses-semester-filter { width: 50%; margin-bottom: 1rem; }
+        #timetable-filter { width: 30%; margin-bottom: 1rem; display: inline-block; }
+        .schedule-info { font-size: 0.8em; color: #555; margin-top: 0.2rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>欢迎，<span id="instructor-name">[教师姓名]</span> 老师</h1>
+        </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="profile">个人资料</div>
+            <div class="tab" data-tab="courses">我的课程</div>
+            <div class="tab" data-tab="enrollments">学生选课</div>
+            <div class="tab" data-tab="timetable">课程表</div>
+        </div>
+        <div class="content" id="profile">
+            <h2>个人信息</h2>
+            <div id="profile-view">
+                <p>姓名: <span id="name">[姓名]</span></p>
+                <p>工号: <span id="instructor-id">[编号]</span></p>
+                <p>性别: <span id="gender">[性别]</span></p>
+                <p>部门: <span id="department">[部门]</span></p>
+                <p>职称: <span id="title">[职称]</span></p>
+                <p>电话: <span id="phone">[电话]</span></p>
+                <p>邮箱: <span id="email">[邮箱]</span></p>
+                <button onclick="showEditForm()">编辑资料</button>
+            </div>
+            <div id="profile-edit" class="edit-form">
+                <form id="edit-form">
+                    <div class="form-group">
+                        <label for="edit-name">姓名</label>
+                        <input type="text" id="edit-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-gender">性别</label>
+                        <select id="edit-gender" name="gender">
+                            <option value="male">男</option>
+                            <option value="female">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-department">部门</label>
+                        <input type="text" id="edit-department" name="department" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-title">职称</label>
+                        <input type="text" id="edit-title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-phone">电话</label>
+                        <input type="text" id="edit-phone" name="phone" pattern="[0-9]{11}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">邮箱</label>
+                        <input type="email" id="edit-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-password">新密码（留空则不更改）</label>
+                        <input type="password" id="edit-password" name="password">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-confirm-password">确认新密码</label>
+                        <input type="password" id="edit-confirm-password" name="confirm_password">
+                    </div>
+                    <button type="submit">保存更改</button>
+                    <button type="button" onclick="hideEditForm()">取消</button>
+                </form>
+            </div>
+        </div>
+        <div class="content hidden" id="courses">
+            <h2>我的课程</h2>
+            <div class="form-group">
+                <label for="courses-semester-filter">选择学期</label>
+                <select id="courses-semester-filter" onchange="loadCourses()">
+                    <option value="">-- 选择学期 --</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>课程编号</th><th>课程名称</th><th>学分</th><th>时间安排</th><th>地点</th></tr>
+                </thead>
+                <tbody id="course-list"></tbody>
+            </table>
+        </div>
+        <div class="content hidden" id="enrollments">
+            <h2>学生选课</h2>
+            <div class="form-group">
+                <label for="enrollments-semester-filter">选择学期</label>
+                <select id="enrollments-semester-filter" onchange="loadEnrollments()">
+                    <option value="">-- 选择学期 --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="course-filter">选择课程</label>
+                <select id="course-filter" onchange="loadEnrollments()">
+                    <option value="">-- 选择课程 --</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>课程编号</th><th>课程名称</th><th>学生编号</th><th>学生姓名</th><th>成绩</th><th>操作</th></tr>
+                </thead>
+                <tbody id="enrollment-list"></tbody>
+            </table>
+        </div>
+        <div class="content hidden" id="timetable">
+            <h2>您的课程表</h2>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="timetable-filter">选择年份和学期</label>
+                <select id="timetable-filter" onchange="loadTimetable()">
+                    <option value="">-- 选择年份和学期 --</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>时间段</th>
+                        <th>星期一</th>
+                        <th>星期二</th>
+                        <th>星期三</th>
+                        <th>星期四</th>
+                        <th>星期五</th>
+                        <th>星期六</th>
+                        <th>星期日</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body">
+                    <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>11</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>12</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                contents.forEach(c => c.classList.add('hidden'));
+                document.getElementById(tab.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // Fetch instructor data
+        async function loadInstructorData() {
+            const response = await fetch('/instructor/data');
+            const data = await response.json();
+            document.getElementById('instructor-name').textContent = data.name;
+            document.getElementById('name').textContent = data.name;
+            document.getElementById('instructor-id').textContent = data.instructor_id;
+            if(data.gender === 'male')
+                document.getElementById('gender').textContent = '男';
+            else
+                document.getElementById('gender').textContent = '女';
+            document.getElementById('department').textContent = data.department;
+            document.getElementById('title').textContent = data.title;
+            document.getElementById('phone').textContent = data.phone;
+            document.getElementById('email').textContent = data.email;
+
+            // Pre-fill edit form
+            document.getElementById('edit-name').value = data.name;
+            document.getElementById('edit-gender').value = data.gender;
+            document.getElementById('edit-department').value = data.department;
+            document.getElementById('edit-title').value = data.title;
+            document.getElementById('edit-phone').value = data.phone;
+            document.getElementById('edit-email').value = data.email;
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-confirm-password').value = '';
+        }
+
+        // Fetch available semesters
+        async function loadSemesters(selectId) {
+            const response = await fetch('/instructor/semesters');
+            const semesters = await response.json();
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">-- Select Semester --</option>' +
+                semesters.map(sem => `<option value="${sem.year} ${sem.semester}">${sem.year} ${sem.semester}</option>`).join('');
+        }
+
+        // Fetch courses taught by the instructor and populate dropdown
+        async function loadCourses() {
+            const filter = document.getElementById('courses-semester-filter').value;
+            const response = await fetch('/instructor/courses' + (filter ? `?year=${filter.split(' ')[0]}&semester=${filter.split(' ')[1]}` : ''));
+            const courses = await response.json();
+            const courseList = document.getElementById('course-list');
+            courseList.innerHTML = courses.map(course => `
+                <tr>
+                    <td>${course.course_id}</td>
+                    <td>${course.course_name}</td>
+                    <td>${course.credit}</td>
+                    <td>${course.schedule}</td>
+                    <td>${course.location}</td>
+                </tr>
+            `).join('');
+
+            // Populate course filter dropdown
+            const courseFilter = document.getElementById('course-filter');
+            courseFilter.innerHTML = '<option value="">-- Select a Course --</option>' +
+                courses.map(course => `
+                    <option value="${course.course_id}">${course.course_id} - ${course.course_name}</option>
+                `).join('');
+        }
+
+        // Fetch and populate timetable
+        async function loadTimetable() {
+            const filter = document.getElementById('timetable-filter').value;
+            const tbody = document.getElementById('timetable-body');
+
+            // Clear existing timetable
+            for (let row of tbody.rows) {
+                for (let cell of row.cells) {
+                    if (cell.cellIndex > 0) cell.innerHTML = '';
+                }
+            }
+
+            // Only load timetable if a semester is selected
+            if (filter) {
+                const [year, semester] = filter.split(' ');
+                const url = `/instructor/timetable?year=${year}&semester=${semester}`;
+                const response = await fetch(url);
+                const timetable = await response.json();
+
+                // Populate timetable for each schedule
+                timetable.forEach(course => {
+                    const timeSlots = course.time_slots.split(',');
+                    const weeks = course.weeks.split(',');
+
+                    timeSlots.forEach((timeSlot, index) => {
+                        const [dayStr, slotRange] = timeSlot.split(':');
+                        const [startWeek, endWeek] = weeks[index].split('-').map(Number);
+                        const dayIndex = parseInt(dayStr) - 1; // 1-based to 0-based (Monday = 0)
+                        const [startSlot, endSlot] = slotRange.split('-').map(Number);
+
+                        for (let slot = startSlot; slot <= endSlot; slot++) {
+                            const cell = tbody.rows[slot - 1].cells[dayIndex + 1];
+                            if (!cell.innerHTML) {
+                                cell.innerHTML = `
+                                    <div>${course.course_name}</div>
+                                    <div>Location: ${course.location}</div>
+                                    <div class="schedule-info">Weeks: ${startWeek}-${endWeek}</div>
+                                `;
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        // Fetch student enrollments for the selected course
+        // Fetch student enrollments for the selected course and semester
+        async function loadEnrollments() {
+            const courseId = document.getElementById('course-filter').value;
+            const semesterFilter = document.getElementById('enrollments-semester-filter').value;
+            let url = '/instructor/enrollments';
+            if (courseId || semesterFilter) {
+                url += '?';
+                const params = [];
+                if (semesterFilter) {
+                    const [year, semester] = semesterFilter.split(' ');
+                    params.push(`year=${year}`, `semester=${semester}`);
+                }
+                if (courseId) {
+                    params.push(`course_id=${courseId}`);
+                }
+                url += params.join('&');
+            }
+            const response = await fetch(url);
+            const enrollments = await response.json();
+            const enrollmentList = document.getElementById('enrollment-list');
+            enrollmentList.innerHTML = enrollments.map(enrollment => `
+                <tr>
+                    <td>${enrollment.course_id}</td>
+                    <td>${enrollment.course_name}</td>
+                    <td>${enrollment.student_id}</td>
+                    <td>${enrollment.student_name}</td>
+                    <td>${enrollment.grade || 'N/A'}</td>
+                    <td>
+                        <input type="number" id="grade-${enrollment.student_id}-${enrollment.course_id}"
+                               min="0" max="100" step="0.1" value="${enrollment.grade || ''}"
+                               placeholder="Enter grade">
+                        <button onclick="assignGrade('${enrollment.student_id}', '${enrollment.course_id}')">Assign</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Edit profile functionality
+        function showEditForm() {
+            document.getElementById('profile-view').classList.add('hidden');
+            document.getElementById('profile-edit').classList.remove('edit-form');
+        }
+
+        function hideEditForm() {
+            document.getElementById('profile-view').classList.remove('hidden');
+            document.getElementById('profile-edit').classList.add('edit-form');
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('edit-password').value;
+            const confirmPassword = document.getElementById('edit-confirm-password').value;
+
+            if (password && password !== confirmPassword) {
+                alert('两次输入的密码不匹配!');
+                return;
+            }
+
+            const formData = {
+                name: document.getElementById('edit-name').value,
+                gender: document.getElementById('edit-gender').value,
+                department: document.getElementById('edit-department').value,
+                title: document.getElementById('edit-title').value,
+                phone: document.getElementById('edit-phone').value,
+                email: document.getElementById('edit-email').value,
+                password: password || null
+            };
+
+            try {
+                const response = await fetch('/instructor/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadInstructorData();
+                    hideEditForm();
+                    alert('个人信息更改成功!');
+                } else {
+                    alert('更改信息失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('An error occurred while updating your profile.');
+            }
+        });
+
+        // Assign grade to a student
+        async function assignGrade(studentId, courseId) {
+            const grade = document.getElementById(`grade-${studentId}-${courseId}`).value;
+            if (grade === '' || grade < 0 || grade > 100) {
+                alert('请在0-100之间输入一个包含一位小数的有效成绩');
+                return;
+            }
+
+            try {
+                const response = await fetch('/instructor/assign_grade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: studentId, course_id: courseId, grade: grade })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadEnrollments();
+                    alert('成绩录入成功!');
+                } else {
+                    alert('成绩录入失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Assign grade error:', error);
+                alert('An error occurred while assigning the grade.');
+            }
+        }
+
+        window.onload = () => {
+            loadInstructorData();
+            loadSemesters('courses-semester-filter');
+            loadSemesters('timetable-filter');
+            loadSemesters('enrollments-semester-filter');
+            loadCourses();
+            loadEnrollments();
+            // Do not call loadTimetable() on page load to keep it empty initially
+        };
+    </script>
+</body>
+</html>

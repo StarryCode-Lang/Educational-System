@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员仪表板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f4f4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header div {
+            text-align: center;
+            /* 居中显示 */
+            flex-grow: 1;
+        }
+
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            /* 下方留出间距 */
+        }
+
+        #stats {
+            font-size: 0.9rem;
+            /* 稍微缩小字体 */
+        }
+
+        .tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab:hover,
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            position: relative;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        button:hover {
+            background: #5a6cd8;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .delete-btn {
+            background: #ff4444;
+        }
+
+        .delete-btn:hover {
+            background: #cc0000;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            width: 500px;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 5px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 5px;
+            color: white;
+            z-index: 1000;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffbb33;
+        }
+
+        .error-text {
+            color: #dc3545;
+            font-size: 0.9rem;
+            position: absolute;
+            bottom: -1.5rem;
+            left: 0;
+        }
+
+        .filter-btn {
+            margin-left: 8px; /* Increased spacing from the column title */
+            padding: 4px 8px; /* Increased padding for a larger, more comfortable size */
+            font-size: 0.65rem; /* Slightly larger text for readability */
+            background: linear-gradient(135deg, #66eacb, #5a9fd8); /* Gradient for depth */
+            color: white; /* White text for contrast */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for a raised effect */
+            transition: all 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .filter-btn:hover {
+            background: linear-gradient(135deg, #5a6cd8, #4e5eb5); /* Darker gradient on hover */
+            transform: translateY(-1px); /* Slight lift effect */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px; /* Rounded corners for a softer look */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Stronger shadow for pop-out effect */
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 5px 0; /* Internal padding for better spacing */
+            top: 100%; /* Position below the button */
+            left: 0;
+            min-width: 150px; /* Minimum width to ensure readability */
+        }
+
+        .filter-dropdown select {
+            width: 100%; /* Full width of the dropdown */
+            padding: 6px 10px; /* Consistent padding */
+            border: none; /* Remove default border */
+            background: #f9f9f9; /* Light background for contrast */
+            font-size: 0.9rem; /* Readable text size */
+            cursor: pointer;
+        }
+
+        .filter-dropdown select:focus {
+            outline: none; /* Remove default focus outline */
+            background: #f0f0f0; /* Slight highlight on focus */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="notification" class="notification"></div>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>欢迎, 管理员 <span id="admin-name">[管理员ID]</span></h1>
+                <div id="stats">
+                    学生总数: <span id="student-count">0</span> |
+                    教师总数: <span id="instructor-count">0</span> |
+                    课程总数: <span id="course-count">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="students">学生管理</div>
+            <div class="tab" data-tab="instructors">教师管理</div>
+            <div class="tab" data-tab="courses">课程管理</div>
+        </div>
+        <div class="content" id="students">
+            <h2>学生列表</h2>
+            <select id="course-filter">
+                <option value="all">全部</option>
+                <option value="none">未选课</option>
+                <option value="1-3">选课1-3门</option>
+                <option value="4+">选课4门及以上</option>
+            </select>
+            <input type="text" id="search-students" placeholder="按ID或姓名搜索">
+            <button onclick="batchDelete('student')">批量删除</button>
+            <button onclick="exportData('students')">导出</button>
+            <form id="add-student-form">
+                <h3>添加学生</h3>
+                <div class="form-group">
+                    <label for="student-id">学生ID</label>
+                    <input type="text" id="student-id" name="student_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-name">姓名</label>
+                    <input type="text" id="student-name" name="name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-gender">性别</label>
+                    <select id="student-gender" name="gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="student-birth-date">出生日期</label>
+                    <input type="date" id="student-birth-date" name="birth_date" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-major">专业</label>
+                    <input type="text" id="student-major" name="major" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-phone">电话</label>
+                    <input type="text" id="student-phone" name="phone" pattern="[0-9]{11}" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-email">邮箱</label>
+                    <input type="email" id="student-email" name="email" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="student-password">密码</label>
+                    <input type="password" id="student-password" name="password" required>
+                    <span class="error-text"></span>
+                </div>
+                <button type="submit">添加学生</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-students"></th>
+                        <th>学生ID</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>出生日期</th>
+                        <th>专业</th>
+                        <th>电话</th>
+                        <th>邮箱</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="student-list"></tbody>
+            </table>
+        </div>
+        <div class="content hidden" id="instructors">
+            <h2>教师列表</h2>
+            <input type="text" id="search-instructors" placeholder="按ID或姓名搜索">
+            <button onclick="batchDelete('instructor')">批量删除</button>
+            <button onclick="exportData('instructors')">导出</button>
+            <form id="add-instructor-form">
+                <h3>添加教师</h3>
+                <div class="form-group">
+                    <label for="instructor-id">教师ID</label>
+                    <input type="text" id="instructor-id" name="instructor_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="instructor-name">姓名</label>
+                    <input type="text" id="instructor-name" name="name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="instructor-gender">性别</label>
+                    <select id="instructor-gender" name="gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="instructor-department">部门</label>
+                    <input type="text" id="instructor-department" name="department">
+                </div>
+                <div class="form-group">
+                    <label for="instructor-title">职称</label>
+                    <input type="text" id="instructor-title" name="title">
+                </div>
+                <div class="form-group">
+                    <label for="instructor-phone">电话</label>
+                    <input type="text" id="instructor-phone" name="phone" pattern="[0-9]{11}" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="instructor-email">邮箱</label>
+                    <input type="email" id="instructor-email" name="email" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="instructor-password">密码</label>
+                    <input type="password" id="instructor-password" name="password" required>
+                    <span class="error-text"></span>
+                </div>
+                <button type="submit">添加教师</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-instructors"></th>
+                        <th>教师ID</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>部门</th>
+                        <th>职称</th>
+                        <th>电话</th>
+                        <th>邮箱</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="instructor-list"></tbody>
+            </table>
+        </div>
+        <div class="content hidden" id="courses">
+            <h2>课程列表</h2>
+            <input type="text" id="search-courses" placeholder="按ID或名称搜索">
+            <button onclick="batchDelete('course')">批量删除</button>
+            <button onclick="exportData('courses')">导出</button>
+            <form id="add-course-form">
+                <h3>添加课程</h3>
+                <div class="form-group">
+                    <label for="course-id">课程ID</label>
+                    <input type="text" id="course-id" name="course_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="course-name">课程名称</label>
+                    <input type="text" id="course-name" name="course_name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="course-credit">学分</label>
+                    <input type="number" id="course-credit" name="credit" min="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="course-instructor">教师</label>
+                    <select id="course-instructor" name="instructor_id"></select>
+                </div>
+                <div class="form-group">
+                    <label for="course-description">开设专业</label>
+                    <input type="text" id="course-description" name="description">
+                </div>
+                <div class="form-group">
+                    <label for="course-location">地点</label>
+                    <input type="text" id="course-location" name="location">
+                </div>
+                <div class="form-group">
+                    <label for="course-year">年份</label>
+                    <input type="number" id="course-year" name="year" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="course-semester">学期</label>
+                    <select id="course-semester" name="semester" required>
+                        <option value="Spring">Spring</option>
+                        <option value="Fall">Fall</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="course-time-slots">时间段<span style="color: gray; font-size: smaller;">（例如：1:1-2,3:3-4 表示周一第一节到第二节 和 周三第三节到第四节上课）</span></label>
+                    <input type="text" id="course-time-slots" name="time_slots" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="course-weeks">周数<span style="color: gray; font-size: smaller;">（例如：1-3,2-8 表示 第一周至第三周的周一第一节到第二节上课，第二周至第八周的周三第三节到第四节上课）</span></label>
+                    <input type="text" id="course-weeks" name="weeks" required>
+                    <span class="error-text"></span>
+                </div>
+                <button type="submit">添加课程</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-courses"></th>
+                        <th>
+                            课程ID
+                            <button class="filter-btn" onclick="toggleFilterDropdown('course_id')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-course_id">
+                                <select multiple id="filter-select-course_id" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            名称
+                            <button class="filter-btn" onclick="toggleFilterDropdown('course_name')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-course_name">
+                                <select multiple id="filter-select-course_name" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            学分
+                            <button class="filter-btn" onclick="toggleFilterDropdown('credit')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-credit">
+                                <select multiple id="filter-select-credit" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            教师
+                            <button class="filter-btn" onclick="toggleFilterDropdown('instructor_name')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-instructor_name">
+                                <select multiple id="filter-select-instructor_name" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            描述
+                            <button class="filter-btn" onclick="toggleFilterDropdown('description')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-description">
+                                <select multiple id="filter-select-description" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            地点
+                            <button class="filter-btn" onclick="toggleFilterDropdown('location')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-location">
+                                <select multiple id="filter-select-location" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            年份
+                            <button class="filter-btn" onclick="toggleFilterDropdown('year')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-year">
+                                <select multiple id="filter-select-year" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            学期
+                            <button class="filter-btn" onclick="toggleFilterDropdown('semester')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-semester">
+                                <select multiple id="filter-select-semester" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            时间段
+                            <button class="filter-btn" onclick="toggleFilterDropdown('time_slots')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-time_slots">
+                                <select multiple id="filter-select-time_slots" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            周数
+                            <button class="filter-btn" onclick="toggleFilterDropdown('weeks')">筛选 ▼</button>
+                            <div class="filter-dropdown hidden" id="filter-weeks">
+                                <select multiple id="filter-select-weeks" onchange="applyFilters()">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="course-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 修改学生模态框 -->
+    <div id="edit-student-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('edit-student-modal')">&times;</span>
+            <h3>修改学生信息</h3>
+            <form id="edit-student-form">
+                <div class="form-group">
+                    <label for="edit-student-id">学生ID</label>
+                    <input type="text" id="edit-student-id" name="student_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-name">姓名</label>
+                    <input type="text" id="edit-student-name" name="name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-gender">性别</label>
+                    <select id="edit-student-gender" name="gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-birth-date">出生日期</label>
+                    <input type="date" id="edit-student-birth-date" name="birth_date" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-major">专业</label>
+                    <input type="text" id="edit-student-major" name="major" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-phone">电话</label>
+                    <input type="text" id="edit-student-phone" name="phone" pattern="[0-9]{11}" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-email">邮箱</label>
+                    <input type="email" id="edit-student-email" name="email" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-password">新密码（留空则不变）</label>
+                    <input type="password" id="edit-student-password" name="password">
+                </div>
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 修改教师模态框 -->
+    <div id="edit-instructor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('edit-instructor-modal')">&times;</span>
+            <h3>修改教师信息</h3>
+            <form id="edit-instructor-form">
+                <div class="form-group">
+                    <label for="edit-instructor-id">教师ID</label>
+                    <input type="text" id="edit-instructor-id" name="instructor_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-name">姓名</label>
+                    <input type="text" id="edit-instructor-name" name="name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-gender">性别</label>
+                    <select id="edit-instructor-gender" name="gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-department">部门</label>
+                    <input type="text" id="edit-instructor-department" name="department">
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-title">职称</label>
+                    <input type="text" id="edit-instructor-title" name="title">
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-phone">电话</label>
+                    <input type="text" id="edit-instructor-phone" name="phone" pattern="[0-9]{11}" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-email">邮箱</label>
+                    <input type="email" id="edit-instructor-email" name="email" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-instructor-password">新密码（留空则不变）</label>
+                    <input type="password" id="edit-instructor-password" name="password">
+                </div>
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 修改课程模态框 -->
+    <div id="edit-course-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('edit-course-modal')">&times;</span>
+            <h3>修改课程信息</h3>
+            <form id="edit-course-form">
+                <div class="form-group">
+                    <label for="edit-course-id">课程ID</label>
+                    <input type="text" id="edit-course-id" name="course_id" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-name">课程名称</label>
+                    <input type="text" id="edit-course-name" name="course_name" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-credit">学分</label>
+                    <input type="number" id="edit-course-credit" name="credit" min="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-instructor">教师</label>
+                    <select id="edit-course-instructor" name="instructor_id"></select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-description">描述</label>
+                    <input type="text" id="edit-course-description" name="description">
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-location">地点</label>
+                    <input type="text" id="edit-course-location" name="location">
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-year">年份</label>
+                    <input type="number" id="edit-course-year" name="year" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-semester">学期</label>
+                    <select id="edit-course-semester" name="semester" required>
+                        <option value="Spring">Spring</option>
+                        <option value="Fall">Fall</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-time-slots">时间段</label>
+                    <input type="text" id="edit-course-time-slots" name="time_slots" required>
+                    <span class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course-weeks">周数</label>
+                    <input type="text" id="edit-course-weeks" name="weeks" required>
+                    <span class="error-text"></span>
+                </div>
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 引入 Chart.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const validators = {
+            id: value => value.trim().length > 0 ? '' : 'ID 不能为空',
+            name: value => value.trim().length > 0 ? '' : '姓名不能为空',
+            phone: value => /^\d{11}$/.test(value) ? '' : '电话必须为11位数字',
+            email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : '邮箱格式错误',
+            birth_date: value => value ? '' : '出生日期不能为空',
+            major: value => value.trim().length > 0 ? '' : '专业不能为空',
+            year: value => value && Number(value) > 0 ? '' : '年份必须为正数',
+            time_slots: value => value.trim().length > 0 ? '' : '时间段不能为空',
+            weeks: value => value.trim().length > 0 ? '' : '周数不能为空'
+        };
+
+        // 通用防抖函数
+        function debounce(fn, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        // 选项卡切换
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        // 通用加载数据函数
+        async function loadData(table, searchInputId, listId, filterFn, renderFn) {
+            const response = await fetch(`/admin/${table}s`); // 确保路由正确
+            const data = await response.json();
+            const searchValue = document.getElementById(searchInputId).value.toLowerCase();
+            const filteredData = filterFn(data, searchValue);
+            document.getElementById(listId).innerHTML = filteredData.map(renderFn).join('');
+        }
+
+        // 学生过滤和渲染
+        const filterStudents = (students, search) => {
+            const filterValue = document.getElementById('course-filter').value;
+            return students.filter(student => {
+                const matchesSearch = student.student_id.toLowerCase().includes(search) || student.name.toLowerCase().includes(search);
+                const courseCount = student.course_count || 0;
+                const matchesFilter = filterValue === 'all' ? true :
+                    filterValue === 'none' ? courseCount === 0 :
+                        filterValue === '1-3' ? (courseCount >= 1 && courseCount <= 3) :
+                            filterValue === '4+' ? courseCount >= 4 : false;
+                return matchesSearch && matchesFilter;
+            });
+        };
+        const renderStudent = student => `
+            <tr>
+                <td><input type="checkbox" class="select-item" data-id="${student.student_id}"></td>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.gender}</td>
+                <td>${new Date(student.birth_date).toLocaleDateString()}</td>
+                <td>${student.major}</td>
+                <td>${student.phone}</td>
+                <td>${student.email}</td>
+                <td>
+                    <button onclick="editStudent('${student.student_id}')">修改</button>
+                    <button class="delete-btn" onclick="deleteRecord('student', '${student.student_id}')">删除</button>
+                </td>
+            </tr>
+        `;
+
+        // 教师过滤和渲染
+        const filterInstructors = (instructors, search) => instructors.filter(i =>
+            i.instructor_id.toLowerCase().includes(search) || i.name.toLowerCase().includes(search));
+        const renderInstructor = instructor => `
+            <tr>
+                <td><input type="checkbox" class="select-item" data-id="${instructor.instructor_id}"></td>
+                <td>${instructor.instructor_id}</td>
+                <td>${instructor.name}</td>
+                <td>${instructor.gender}</td>
+                <td>${instructor.department || '未设置'}</td>
+                <td>${instructor.title || '未设置'}</td>
+                <td>${instructor.phone}</td>
+                <td>${instructor.email}</td>
+                <td>
+                    <button onclick="editInstructor('${instructor.instructor_id}')">修改</button>
+                    <button class="delete-btn" onclick="deleteRecord('instructor', '${instructor.instructor_id}')">删除</button>
+                </td>
+            </tr>
+        `;
+
+        // 课程过滤和渲染
+        const filterCourses = (courses, search) => courses.filter(c =>
+            c.course_id.toLowerCase().includes(search) || c.course_name.toLowerCase().includes(search));
+        const renderCourse = course => `
+            <tr>
+                <td><input type="checkbox" class="select-item" data-id="${course.course_id}"></td>
+                <td>${course.course_id}</td>
+                <td>${course.course_name}</td>
+                <td>${course.credit || '未设置'}</td>
+                <td>${course.instructor_name || '未分配'}</td>
+                <td>${course.description || '无'}</td>
+                <td>${course.location || '未设置'}</td>
+                <td>${course.year}</td>
+                <td>${course.semester}</td>
+                <td>${course.time_slots}</td>
+                <td>${course.weeks}</td>
+                <td>
+                    <button onclick="editCourse('${course.course_id}')">修改</button>
+                    <button class="delete-btn" onclick="deleteRecord('course', '${course.course_id}')">删除</button>
+                </td>
+            </tr>
+        `;
+
+        // 表单提交通用函数,添加 CSRF 令牌
+        async function submitForm(url, formId, refreshFn, successMsg) {
+            const form = document.getElementById(formId);
+            const formData = Object.fromEntries(new FormData(form));
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    refreshFn();
+                    form.reset();
+                    showNotification(successMsg, 'success');
+                } else {
+                    showNotification('操作失败：' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error(`Error in ${formId}:`, error);
+                showNotification('操作时发生错误。', 'error');
+            }
+        }
+
+        // 删除记录
+        async function deleteRecord(table, id) {
+            if (confirm(`确定要删除${table} ID为${id}的记录吗？`)) {
+                try {
+                    const response = await fetch('/admin/delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ table, id })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        refreshTable(table);
+                        showNotification('删除成功！', 'success');
+                    } else {
+                        showNotification('删除失败：' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    showNotification('删除时发生错误。', 'error');
+                }
+            }
+        }
+
+        // 批量删除
+        async function batchDelete(table) {
+            const checkboxes = document.querySelectorAll(`#${table}-list .select-item:checked`);
+            const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+            if (ids.length === 0) return showNotification('请至少选择一条记录', 'warning');
+            if (confirm(`确定要删除选中的 ${ids.length} 条${table}记录吗？`)) {
+                try {
+                    const response = await fetch('/admin/delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ table, ids })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        refreshTable(table);
+                        showNotification('批量删除成功！', 'success');
+                    } else {
+                        showNotification('批量删除失败：' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Batch delete error:', error);
+                    showNotification('批量删除时发生错误。', 'error');
+                }
+            }
+        }
+
+        // 刷新表格
+        const refreshTable = table => {
+            if (table === 'student') loadData('student', 'search-students', 'student-list', filterStudents, renderStudent);
+            else if (table === 'instructor') loadData('instructor', 'search-instructors', 'instructor-list', filterInstructors, renderInstructor);
+            else if (table === 'course') loadCoursesData();
+        };
+
+        // 编辑记录
+        async function editRecord(table, id, modalId, formId, fields) {
+            const response = await fetch(`/admin/${table}s`);
+            const data = await response.json();
+            const item = data.find(i => i[`${table}_id`] === id);
+            fields.forEach(([inputId, key]) => {
+                document.getElementById(inputId).value = item[key] || '';
+            });
+            document.getElementById(modalId).dataset.oldId = id;
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        const editStudent = id => editRecord('student', id, 'edit-student-modal', 'edit-student-form', [
+            ['edit-student-id', 'student_id'], ['edit-student-name', 'name'], ['edit-student-gender', 'gender'],
+            ['edit-student-birth-date', 'birth_date'], ['edit-student-major', 'major'], ['edit-student-phone', 'phone'],
+            ['edit-student-email', 'email'], ['edit-student-password', '']
+        ]);
+        const editInstructor = id => editRecord('instructor', id, 'edit-instructor-modal', 'edit-instructor-form', [
+            ['edit-instructor-id', 'instructor_id'], ['edit-instructor-name', 'name'], ['edit-instructor-gender', 'gender'],
+            ['edit-instructor-department', 'department'], ['edit-instructor-title', 'title'], ['edit-instructor-phone', 'phone'],
+            ['edit-instructor-email', 'email'], ['edit-instructor-password', '']
+        ]);
+        const editCourse = id => editRecord('course', id, 'edit-course-modal', 'edit-course-form', [
+            ['edit-course-id', 'course_id'], ['edit-course-name', 'course_name'], ['edit-course-credit', 'credit'],
+            ['edit-course-instructor', 'instructor_id'], ['edit-course-description', 'description'], ['edit-course-location', 'location'],
+            ['edit-course-year', 'year'], ['edit-course-semester', 'semester'], ['edit-course-time-slots', 'time_slots'],
+            ['edit-course-weeks', 'weeks']
+        ]);
+
+        // 表单验证
+        function validateForm(formId) {
+            const form = document.getElementById(formId);
+            let isValid = true;
+            form.querySelectorAll('input, select').forEach(input => {
+                const validator = validators[input.name];
+                if (validator) {
+                    const error = validator(input.value);
+                    const errorEl = input.nextElementSibling;
+                    errorEl.textContent = error;
+                    if (error) isValid = false;
+                }
+            });
+            return isValid;
+        }
+
+        // Store all courses data globally for filtering
+        let allCourses = [];
+
+        // Fetch unique values for each column to populate filter dropdowns
+        async function loadFilterOptions() {
+            const response = await fetch('/admin/unique_values?table=course');
+            const uniqueValues = await response.json();
+
+            const columns = [
+                'course_id', 'course_name', 'credit', 'instructor_name',
+                'description', 'location', 'year', 'semester', 'time_slots', 'weeks'
+            ];
+
+            columns.forEach(column => {
+                const select = document.getElementById(`filter-select-${column}`);
+                const values = uniqueValues[column] || [];
+                // 添加"无"选项作为第一个选项
+                select.innerHTML = `<option value="">无</option>` +
+                    values.map(value =>
+                        `<option value="${value}">${value || '未设置'}</option>`
+                    ).join('');
+            });
+        }
+
+        // Toggle filter dropdown visibility
+        function toggleFilterDropdown(column) {
+            const dropdown = document.getElementById(`filter-${column}`);
+            const isHidden = dropdown.classList.contains('hidden');
+
+            // 先隐藏所有下拉框
+            document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.add('hidden'));
+
+            // 点击外部时关闭下拉框
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target) &&
+                        !e.target.matches(`[onclick="toggleFilterDropdown('${column}')"]`)) {
+                        dropdown.classList.add('hidden');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }
+        }
+
+        // Apply filters to the courses table
+        function applyFilters() {
+            const filters = {};
+            const columns = [
+                'course_id', 'course_name', 'credit', 'instructor_name',
+                'description', 'location', 'year', 'semester', 'time_slots', 'weeks'
+            ];
+
+            columns.forEach(column => {
+                const select = document.getElementById(`filter-select-${column}`);
+                const selectedValues = Array.from(select.selectedOptions)
+                    .filter(option => option.value !== '') // 排除"无"选项
+                    .map(option => option.value);
+
+                if (selectedValues.length > 0) {
+                    filters[column] = selectedValues;
+                }
+
+                // 更新筛选按钮文本
+                const filterBtn = document.querySelector(`[onclick="toggleFilterDropdown('${column}')"]`);
+                if (selectedValues.length === 0) {
+                    filterBtn.textContent = "筛选 ▼";
+                } else if (selectedValues.length === 1) {
+                    filterBtn.textContent = selectedValues[0];
+                } else {
+                    filterBtn.textContent = `已选${selectedValues.length}项`;
+                }
+            });
+
+            // 应用搜索过滤
+            const searchValue = document.getElementById('search-courses').value.toLowerCase();
+
+            const filteredCourses = allCourses.filter(course => {
+                const matchesSearch = filterCourses([course], searchValue).length > 0;
+                const matchesFilters = Object.keys(filters).every(column => {
+                    const value = course[column] ? String(course[column]) : '';
+                    return filters[column].includes(value);
+                });
+                return matchesSearch && matchesFilters;
+            });
+            // 重新渲染表格数据
+            document.getElementById('course-list').innerHTML = filteredCourses.map(renderCourse).join('');
+        }
+
+        // Override the loadData for courses to store allCourses
+        async function loadCoursesData() {
+            const response = await fetch('/admin/courses');
+            allCourses = await response.json();
+            applyFilters(); // Initial render with any existing filters
+            loadFilterOptions(); // Load filter options after data is fetched
+        }
+
+        // 初始化
+        window.onload = () => {
+            fetch('/admin/data')
+                .then(res => res.json())
+                .then(data => {
+                    const admin_name = data.success ? data.admin_name : '未知';
+                    document.getElementById('admin-name').textContent = admin_name;
+                })
+                .catch(err => {
+                    console.error('Error fetching admin data:', err);
+                    document.getElementById('admin-name').textContent = '未知';
+                });
+
+            // 获取总数数据
+            fetch('/admin/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('student-count').textContent = data.student_count;
+                    document.getElementById('instructor-count').textContent = data.instructor_count;
+                    document.getElementById('course-count').textContent = data.course_count;
+                })
+                .catch(err => console.error('Error fetching stats:', err));
+
+            document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+            document.getElementById('add-student-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('add-student-form')) submitForm('/admin/add_student', 'add-student-form', () => loadData('student', 'search-students', 'student-list', filterStudents, renderStudent), '学生添加成功！');
+            });
+            document.getElementById('add-instructor-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('add-instructor-form')) submitForm('/admin/add_instructor', 'add-instructor-form', () => loadData('instructor', 'search-instructors', 'instructor-list', filterInstructors, renderInstructor), '教师添加成功！');
+            });
+            document.getElementById('add-course-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('add-course-form')) submitForm('/admin/add_course', 'add-course-form', () => loadCoursesData(), '课程添加成功！');
+            });
+            document.getElementById('edit-student-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('edit-student-form')) submitForm('/admin/update_student', 'edit-student-form', () => { closeModal('edit-student-modal'); loadData('student', 'search-students', 'student-list', filterStudents, renderStudent); }, '学生信息修改成功！');
+            });
+            document.getElementById('edit-instructor-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('edit-instructor-form')) submitForm('/admin/update_instructor', 'edit-instructor-form', () => { closeModal('edit-instructor-modal'); loadData('instructor', 'search-instructors', 'instructor-list', filterInstructors, renderInstructor); }, '教师信息修改成功！');
+            });
+            document.getElementById('edit-course-form').addEventListener('submit', e => {
+                e.preventDefault();
+                if (validateForm('edit-course-form')) submitForm('/admin/update_course', 'edit-course-form', () => { closeModal('edit-course-modal'); loadCoursesData(); }, '课程信息修改成功！');
+            });
+
+            document.querySelectorAll('.content').forEach(content => {
+                content.addEventListener('input', debounce(e => {
+                    const targetId = e.target.id;
+                    if (targetId === 'search-students') {
+                        loadData('student', 'search-students', 'student-list', filterStudents, renderStudent);
+                    } else if (targetId === 'search-instructors') {
+                        loadData('instructor', 'search-instructors', 'instructor-list', filterInstructors, renderInstructor);
+                    } else if (targetId === 'search-courses') {
+                        applyFilters(); // Use applyFilters to include search and column filters
+                    }
+                }, 300));
+            });
+            document.getElementById('course-filter').addEventListener('change', () => loadData('student', 'search-students', 'student-list', filterStudents, renderStudent));
+            document.querySelectorAll('[id^="select-all"]').forEach(chk => chk.addEventListener('change', () => {
+                document.querySelectorAll(`#${chk.id.split('-')[2]}-list .select-item`).forEach(cb => cb.checked = chk.checked);
+            }));
+
+            loadData('student', 'search-students', 'student-list', filterStudents, renderStudent);
+            loadData('instructor', 'search-instructors', 'instructor-list', filterInstructors, renderInstructor);
+            loadCoursesData(); // Load courses with filter support
+            loadInstructorsForSelect('course-instructor');
+            loadInstructorsForSelect('edit-course-instructor');
+        };
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            modal.querySelector('form').reset();
+        }
+
+        async function loadInstructorsForSelect(selectId) {
+            const response = await fetch('/admin/instructors');
+            const instructors = await response.json();
+            document.getElementById(selectId).innerHTML = '<option value="">未分配</option>' + instructors.map(i => `<option value="${i.instructor_id}">${i.name}</option>`).join('');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.opacity = 1;
+            setTimeout(() => notification.style.opacity = 0, 5000);
+        }
+
+        function exportData(table) {
+            window.location.href = `/admin/export/${table}`;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9203d252b9bf7b98',t:'MTc0MTk1NTgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</html>
